@@ -1,0 +1,147 @@
+;/*++
+;
+;Copyright (c) CoolStar.  All rights reserved.
+;
+;Module Name:
+;    coolstar.inf
+;
+;Abstract:
+;    INF file for installing the Chromebook Keyboard driver
+;
+;
+;--*/
+
+[Version]
+Signature="$Windows NT$"
+Provider=%ProviderName%
+ClassGUID={4D36E96B-E325-11CE-BFC1-08002BE10318}
+Class=Keyboard
+DriverVer = 03/25/2023,4.0.0.0
+CatalogFile=croskeyboard.cat
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir   = 12
+croskeyboard_CoInstaller_CopyFiles = 11
+
+;
+; Driver information
+;
+
+[Manufacturer]
+%MfgName% = Standard,NTamd64
+
+[Standard.NTamd64]
+%croskeyboard.DeviceDesc% = croskeyboard, ACPI\GOOG000A
+
+;
+; General installation section
+;
+
+[croskeyboard.NT]
+; perform port related actions from keyboard.inf
+Include=keyboard.inf
+Needs=STANDARD_Inst
+
+; Copy the driver over
+CopyFiles=croskeyboard.CopyFiles
+
+
+;
+; File sections
+;
+
+[croskeyboard.CopyFiles]
+croskeyboard.sys
+
+
+;
+; Service Installation
+;
+
+[croskeyboard.NT.Services]
+AddService = croskeyboard,  , croskeyboard_Service_Inst
+; Install the port driver and mouclass from keyboard.inf
+Include=keyboard.inf
+Needs=STANDARD_Inst.Services
+
+[croskeyboard_Service_Inst]
+DisplayName    = %croskeyboard.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 0                  ; SERVICE_ERROR_IGNORE
+ServiceBinary  = %12%\croskeyboard.sys
+
+[croskeyboard.NT.HW]
+; Add the device upper filter
+AddReg = croskeyboard.HW.AddReg
+
+; run the directives need by the port driver
+Include=keyboard.inf
+Needs=STANDARD_Inst.HW
+
+[croskeyboard.HW.AddReg]
+HKR,,"UpperFilters",0x00010000,"croskeyboard"
+
+
+;
+; Source file information
+;
+
+
+[SourceDisksNames]
+1 = %DiskId1%,,,
+
+[SourceDisksFiles]
+croskeyboard.sys = 1
+;
+
+
+;
+;--- croskeyboard Coinstaller installation ------
+;
+
+[croskeyboard.NT.CoInstallers]
+AddReg=croskeyboard_CoInstaller_AddReg
+CopyFiles=croskeyboard_CoInstaller_CopyFiles
+
+[croskeyboard_CoInstaller_AddReg]
+;
+
+
+[croskeyboard_CoInstaller_CopyFiles]
+;
+
+
+[croskeyboard.NT.Wdf]
+KmdfService = croskeyboard, croskeyboard_wdfsect
+
+[croskeyboard_wdfsect]
+KmdfLibraryVersion = 1.15
+
+
+[Strings]
+
+;
+; Non-Localizable Strings
+;
+
+REG_SZ         = 0x00000000
+REG_MULTI_SZ   = 0x00010000
+REG_EXPAND_SZ  = 0x00020000
+REG_BINARY     = 0x00000001
+REG_DWORD      = 0x00010001
+
+;
+; Localizable Strings
+;
+
+ProviderName = "CoolStar"
+MfgName      = "CoolStar"
+
+croskeyboard.DeviceDesc = "Chromebook Keyboard"
+
+; Make sure the service description is unique to avoid collision with another INF.
+croskeyboard.SvcDesc = Chromebook Keyboard Driver"
+
+DiskId1 = "Chromebook Keyboard"
